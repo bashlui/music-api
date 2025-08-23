@@ -1,0 +1,67 @@
+# Keep necessary build files (ensure requirements/Dockerfile are included)
+!requirements.txt
+!pyproject.toml
+!poetry.lock
+!Dockerfile
+
+# Git / CI metadata
+.git
+.gitignore
+.github/
+
+# Local virtual envs / Python packaging
+.venv/
+venv/
+env/
+ENV/
+pip-wheel-metadata/
+
+# Python caches and test caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.cache/
+pip-delete-this-directory.txt
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+*.whl
+
+# Editor / OS / CI files
+.vscode/
+.idea/
+*.iml
+*.DS_Store
+Thumbs.db
+*.log
+
+# Tests, docs and examples (exclude from image unless needed)
+tests/
+docs/
+examples/
+
+# Local DBs, secrets and keys (never include these in the image)
+*.sqlite3
+*.db
+*.pem
+*.key
+*.crt
+secrets.*
+credentials.json
+
+# Node / frontend artifacts (if present)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Large binary blobs you don't need at runtime
+*.mp4
+*.mov
+*.zip
+*.tar.gz
+*.psd
