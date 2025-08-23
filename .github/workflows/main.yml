@@ -43,6 +43,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: |
             ${{ env.IMAGE }}:latest
-            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
