@@ -15,10 +15,6 @@ env:
   CONTEXT: app
   DOCKERFILE: Dockerfile
 
-  # Map secrets to env so we can use them in `if:` expressions
-  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-  DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-
 concurrency:
   group: docker-${{ github.ref }}
   cancel-in-progress: true
