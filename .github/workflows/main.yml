@@ -7,13 +7,12 @@ on:
 
 permissions:
   contents: read
-  packages: write  # for GHCR
+  packages: write  # needed for GHCR
 
 env:
   GHCR_IMAGE: ghcr.io/${{ github.repository }}
-  DH_IMAGE: dockerntonio/music-api
   CONTEXT: app
-  DOCKERFILE: Dockerfile
+  DOCKERFILE: ./Dockerfile
 
 concurrency:
   group: docker-${{ github.ref }}
@@ -26,7 +25,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up QEMU (emulation)
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Buildx
@@ -39,14 +38,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Log in to Docker Hub
-        if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      # 1) Multi-arch build → :latest (Docker Hub + GHCR)
+      # Multi-arch build → :latest
       - name: Build & push multi-arch :latest
         uses: docker/build-push-action@v6
         with:
@@ -54,13 +46,11 @@ jobs:
           file: ${{ env.DOCKERFILE }}
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: |
-            ${{ env.DH_IMAGE }}:latest
-            ${{ env.GHCR_IMAGE }}:latest
+          tags: ${{ env.GHCR_IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # 2) amd64-only build → :render (Docker Hub + GHCR)
+      # amd64-only build → :render
       - name: Build & push amd64-only :render
         uses: docker/build-push-action@v6
         with:
@@ -68,8 +58,6 @@ jobs:
           file: ${{ env.DOCKERFILE }}
           push: true
           platforms: linux/amd64
-          tags: |
-            ${{ env.DH_IMAGE }}:render
-            ${{ env.GHCR_IMAGE }}:render
+          tags: ${{ env.GHCR_IMAGE }}:render
           cache-from: type=gha
           cache-to: type=gha,mode=max
