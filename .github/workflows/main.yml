@@ -12,8 +12,8 @@ permissions:
 env:
   GHCR_IMAGE: ghcr.io/${{ github.repository }}
   DH_IMAGE: dockerntonio/music-api
-  CONTEXT: /app/Dockerfile
-  DOCKERFILE: /app/Dockerfile
+  CONTEXT: app
+  DOCKERFILE: Dockerfile
 
   # Map secrets to env so we can use them in `if:` expressions
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
