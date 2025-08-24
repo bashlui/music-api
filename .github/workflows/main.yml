@@ -1,28 +1,32 @@
-name: CI - multi-arch (parallel)
+name: CI – Docker (multi-arch + render)
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
     branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
   contents: read
-  packages: write
+  packages: write 
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE: ghcr.io/${{ github.repository }}
+  GHCR_IMAGE: ghcr.io/${{ github.repository }}
+  DH_IMAGE: dockerntonio/music-api   
+  CONTEXT: /app/Dockerfile
+  DOCKERFILE: /app/Dockerfile 
+  
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up QEMU (for emulation)
+      - name: Set up QEMU (emulation)
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Buildx
@@ -31,18 +35,41 @@ jobs:
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push multi-arch image
+      - name: Log in to Docker Hub
+        if: ${{ secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 1) Multi-arch build → :latest (Docker Hub + GHCR)
+      - name: Build & push multi-arch :latest
         uses: docker/build-push-action@v6
         with:
-          context: ./app
+          context: ${{ env.CONTEXT }}
+          file: ${{ env.DOCKERFILE }}
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ env.IMAGE }}:latest
-            ${{ env.IMAGE }}:latest
+            ${{ env.DH_IMAGE }}:latest
+            ${{ env.GHCR_IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 2) amd64-only build → :render (Docker Hub + GHCR)
+      - name: Build & push amd64-only :render
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.CONTEXT }}
+          file: ${{ env.DOCKERFILE }}
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ${{ env.DH_IMAGE }}:render
+            ${{ env.GHCR_IMAGE }}:render
           cache-from: type=gha
           cache-to: type=gha,mode=max
