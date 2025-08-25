@@ -1,26 +1,28 @@
-name: CI – Docker (multi-arch + render)
+name: CI - multi-arch (parallel)
 
 on:
   push:
+    branches: [ "main" ]
+  pull_request:
     branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
   contents: read
-  packages: write  # needed for GHCR
+  packages: write
 
 env:
-  GHCR_IMAGE: ghcr.io/${{ github.repository }}
+  REGISTRY: ghcr.io
   IMAGE: ghcr.io/${{ github.repository }}
 
 jobs:
-  build-and-push:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
+      - name: Set up QEMU (for emulation)
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Buildx
@@ -33,24 +35,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Multi-arch build → :latest
-      - name: Build & push multi-arch :latest
+      - name: Build and push multi-arch image
         uses: docker/build-push-action@v6
         with:
           context: ./app
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: ${{ env.GHCR_IMAGE }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # amd64-only build → :render
-      - name: Build & push amd64-only :render
-        uses: docker/build-push-action@v6
-        with:
-          context: ./app
-          push: true
-          platforms: linux/amd64
-          tags: ${{ env.GHCR_IMAGE }}:render
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:render
           cache-from: type=gha
           cache-to: type=gha,mode=max
