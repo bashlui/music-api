@@ -1,4 +1,4 @@
-name: CI - multi-arch (parallel)
+name: CI - Build and Deploy
 
 on:
   push:
@@ -12,11 +12,13 @@ permissions:
   packages: write
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE: ghcr.io/${{ github.repository }}
+  GHCR_REGISTRY: ghcr.io
+  GHCR_IMAGE: ghcr.io/${{ github.repository }}
+  DOCKERHUB_IMAGE: ${{ github.repository }}
 
 jobs:
-  build:
+  build-ghcr:
+    name: Build and Push to GHCR
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -31,18 +33,53 @@ jobs:
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ${{ env.GHCR_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push multi-arch image
+      - name: Build and push to GHCR
         uses: docker/build-push-action@v6
         with:
           context: ./app
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ env.IMAGE }}:latest
-            ${{ env.IMAGE }}:render
+            ${{ env.GHCR_IMAGE }}:latest
+            ${{ env.GHCR_IMAGE }}:render
+            ${{ env.GHCR_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-dockerhub:
+    name: Build and Push to Docker Hub
+    runs-on: ubuntu-latest
+    needs: build-ghcr
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU (for emulation)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push to Docker Hub
+        uses: docker/build-push-action@v6
+        with:
+          context: ./app
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ env.DOCKERHUB_IMAGE }}:latest
+            ${{ env.DOCKERHUB_IMAGE }}:render
+            ${{ env.DOCKERHUB_IMAGE }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
