@@ -31,6 +31,8 @@ async def read_song(song_id: int):
 
 @app.post("/api/songs", response_model=Song)
 async def create_song(song: Song):
+    if any(s.id == song.id for s in songs):
+        raise HTTPException(status_code=400, detail="Song with this ID already exists")
     songs.append(song)
     return song
 
