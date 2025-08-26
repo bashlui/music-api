@@ -10,7 +10,7 @@ class Song(BaseModel):
     title: str
     artist: str
     album: str
-    year: int
+    year: str
     genre: str
     image_url: str
     description: str
