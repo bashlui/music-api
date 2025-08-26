@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from fastapi import Query
+from typing import List
 
 app = FastAPI()
 
@@ -16,26 +18,26 @@ class Song(BaseModel):
 # Sample data
 songs: list[Song] = []
 
-@app.get("/")
-async def read_root():
-    return {"Hi! This is a music API developed by Tono, welcome!, feel free to explore."}
-
-# Method to request the list of songs
-@app.get("/api/songs")
+@app.get("/api/songs", response_model=List[Song])
 async def read_songs():
-    return {"songs": songs}
+    return songs
 
-# Method to get song or songs by ID
-@app.get("/api/songs/{song_id}")
+@app.get("/api/songs/{song_id}", response_model=Song)
 async def read_song(song_id: int):
     song = next((s for s in songs if s.id == song_id), None)
-    if song:
-        return {"song": song}
-    raise HTTPException(status_code=404, detail="Song not found")
+    if not song:
+        raise HTTPException(status_code=404, detail="Song not found")
+    return song
 
-# Method to create a new song
-@app.post("/api/songs/")
+@app.post("/api/songs", response_model=Song)
 async def create_song(song: Song):
     songs.append(song)
-    return {"song": song}
+    return song
 
+@app.get("/api/songs/search", response_model=List[Song])
+async def search_songs(q: str = Query(..., min_length=1)):
+    ql = q.lower()
+    return [s for s in songs if ql in s.title.lower()
+                             or ql in s.artist.lower()
+                             or ql in s.album.lower()
+                             or ql in s.genre.lower()]
