@@ -18,6 +18,10 @@ class Song(BaseModel):
 # Sample data
 songs: list[Song] = []
 
+@app.get("/")
+async def read_root():
+    return {"message": "Welcome to the Music API, developed by Tono. Feel free to explore the endpoints."}
+
 @app.get("/api/songs", response_model=List[Song])
 async def read_songs():
     return songs
