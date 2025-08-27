@@ -1,6 +1,7 @@
 # Music iOS API 
 
-Music API developed with Python's FastAPI framework and deployed on Docker. This API focuses on songs, making the user be able to get and post songs that he likes.
+Music API developed with Python's FastAPI framework and deployed on Docker. This API focuses on songs, making the user able to get and post songs that they like.
+The API is available in https://music-api-service-1cp0.onrender.com, deployed on Render.
 
 ## API Reference
 
@@ -13,7 +14,7 @@ Returns a welcome message to test if the API is working.
 **Response Example**
 ```json
 {
-  "Hi! This is a music API developed by Tono, welcome!, feel free to explore."
+  "message": "Welcome to the Music API, developed by Tono. Feel free to explore the endpoints."
 }
 ```
 
@@ -27,20 +28,18 @@ Returns a list of all songs available in the API.
 
 **Response Example**
 ```json
-{
-  "songs": [
-    {
-      "id": 1,
-      "title": "Song Title",
-      "artist": "Artist Name",
-      "album": "Album Name",
-      "year": 2024,
-      "genre": "Genre",
-      "image_url": "https://example.com/image.jpg",
-      "description": "Song description"
-    }
-  ]
-}
+[
+  {
+    "id": 1,
+    "title": "Song Title",
+    "artist": "Artist Name",
+    "album": "Album Name",
+    "year": "2024",
+    "genre": "Genre",
+    "image_url": "https://example.com/image.jpg",
+    "description": "Song description"
+  }
+]
 ```
 
 ---
@@ -57,16 +56,14 @@ Returns the song with the specified ID.
 **Response Example**
 ```json
 {
-  "song": {
-    "id": 1,
-    "title": "Song Title",
-    "artist": "Artist Name",
-    "album": "Album Name",
-    "year": 2024,
-    "genre": "Genre",
-    "image_url": "https://example.com/image.jpg",
-    "description": "Song description"
-  }
+  "id": 1,
+  "title": "Song Title",
+  "artist": "Artist Name",
+  "album": "Album Name",
+  "year": "2024",
+  "genre": "Genre",
+  "image_url": "https://example.com/image.jpg",
+  "description": "Song description"
 }
 ```
 
@@ -81,7 +78,7 @@ Returns the song with the specified ID.
 
 ### Create a New Song
 
-**POST /api/songs/**
+**POST /api/song**
 
 Creates a new song and adds it to the list.
 
@@ -92,7 +89,7 @@ Creates a new song and adds it to the list.
   "title": "New Song",
   "artist": "New Artist", 
   "album": "New Album",
-  "year": 2025,
+  "year": "2025",
   "genre": "Pop",
   "image_url": "https://example.com/new-image.jpg",
   "description": "A new song description"
@@ -102,17 +99,49 @@ Creates a new song and adds it to the list.
 **Response Example**
 ```json
 {
-  "song": {
-    "id": 2,
-    "title": "New Song",
-    "artist": "New Artist",
-    "album": "New Album", 
-    "year": 2025,
-    "genre": "Pop",
-    "image_url": "https://example.com/new-image.jpg",
-    "description": "A new song description"
-  }
+  "id": 2,
+  "title": "New Song",
+  "artist": "New Artist",
+  "album": "New Album", 
+  "year": "2025",
+  "genre": "Pop",
+  "image_url": "https://example.com/new-image.jpg",
+  "description": "A new song description"
 }
+```
+
+**Error Response (400)**
+```json
+{
+  "detail": "Song with this ID already exists"
+}
+```
+
+---
+
+### Search Songs
+
+**GET /api/songs/search?q={query}**
+
+Search for songs by title, artist, album, or genre.
+
+**Query Parameters**
+- `q` (string): Search term, minimum length 1.
+
+**Response Example**
+```json
+[
+  {
+    "id": 3,
+    "title": "Love Song",
+    "artist": "Artist Name",
+    "album": "Album Name",
+    "year": "2024",
+    "genre": "Pop",
+    "image_url": "https://example.com/image.jpg",
+    "description": "A love song"
+  }
+]
 ```
 
 ---
@@ -125,7 +154,7 @@ Creates a new song and adds it to the list.
 | title      | str    | Song title         |
 | artist     | str    | Artist name        |
 | album      | str    | Album name         |
-| year       | int    | Release year       |
+| year       | str    | Release year       |
 | genre      | str    | Genre              |
 | image_url  | str    | Image URL          |
 | description| str    | Song description   |
@@ -178,20 +207,21 @@ curl http://localhost:8000/api/songs
 curl http://localhost:8000/api/songs/1
 
 # Create a new song
-curl -X POST http://localhost:8000/api/songs/ \
+curl -X POST http://localhost:8000/api/song \
   -H "Content-Type: application/json" \
   -d '{
     "id": 1,
     "title": "Example Song",
     "artist": "Example Artist",
     "album": "Example Album",
-    "year": 2024,
+    "year": "2024",
     "genre": "Pop",
     "image_url": "https://example.com/image.jpg",
     "description": "An example song for testing"
   }'
+
+# Search songs
+curl "http://localhost:8000/api/songs/search?q=love"
 ```
 
 The API will be available at `http://localhost:8000` when running with Docker or locally.
-
-
